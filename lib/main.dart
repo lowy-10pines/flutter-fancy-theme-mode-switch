@@ -1,3 +1,6 @@
+import 'dart:ui';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
 
@@ -34,10 +37,6 @@ class _DecoratedBoxTransitionExampleAppState
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 FancySwitch(value: value, onChanged: onTap),
-                Switch.adaptive(value: value, onChanged: onTap),
-                Switch(value: value, onChanged: onTap),
-                Checkbox.adaptive(value: value, onChanged: onTap),
-                Checkbox(value: value, onChanged: onTap),
               ],
             ),
           ),
@@ -64,7 +63,7 @@ class _FancySwitchState extends State<FancySwitch>
     with TickerProviderStateMixin {
   late final AnimationController _controller = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 300),
+    duration: const Duration(milliseconds: 3000),
   );
 
   late final CurvedAnimation _curvedAnimation = CurvedAnimation(
@@ -95,8 +94,8 @@ class _FancySwitchState extends State<FancySwitch>
     } else {
       _controller.reverse();
     }
-    const double height = 40;
-    const double width = 70;
+    const double height = 200;
+    const double width = 350;
     return SizedBox(
       height: height,
       width: width,
@@ -300,7 +299,7 @@ class SolYLuna extends StatelessWidget {
       ),
       end: const ShapeDecoration(
         color: Colors.yellow,
-        shape: RoundedRectangleBorder(),
+        shape: CircleBorder(),
         shadows: <BoxShadow>[
           BoxShadow(
             color: Colors.orange,
@@ -334,13 +333,12 @@ class SolYLuna extends StatelessWidget {
   }
 }
 
-class MoonBorder extends ShapeBorder {
-  final BorderSide side;
-  const MoonBorder({this.side = BorderSide.none});
-
-  @override
-  EdgeInsetsGeometry get dimensions =>
-      EdgeInsets.all(math.max(side.strokeInset, 0));
+class MoonBorder extends OutlinedBorder {
+  final double factorConcavidad;
+  const MoonBorder({
+    super.side,
+    this.factorConcavidad = 0.8,
+  });
 
   @override
   ShapeBorder scale(double t) => MoonBorder(side: side.scale(t));
@@ -350,6 +348,13 @@ class MoonBorder extends ShapeBorder {
     if (a is MoonBorder) {
       return MoonBorder(
         side: BorderSide.lerp(a.side, side, t),
+        factorConcavidad: lerpDouble(a.factorConcavidad, factorConcavidad, t)!,
+      );
+    }
+    if (a is CircleBorder) {
+      return MoonBorder(
+        side: BorderSide.lerp(a.side, side, t),
+        factorConcavidad: lerpDouble(0.8, factorConcavidad, t)!,
       );
     }
     return super.lerpFrom(a, t);
@@ -360,45 +365,101 @@ class MoonBorder extends ShapeBorder {
     if (b is MoonBorder) {
       return MoonBorder(
         side: BorderSide.lerp(side, b.side, t),
+        factorConcavidad: lerpDouble(factorConcavidad, b.factorConcavidad, t)!,
       );
     }
+
+    if (b is CircleBorder) {
+      return MoonBorder(
+        side: BorderSide.lerp(side, b.side, t),
+        factorConcavidad: lerpDouble(factorConcavidad, -1, t)!,
+      );
+    }
+
     return super.lerpTo(b, t);
   }
 
   @override
   Path getInnerPath(Rect rect, {TextDirection? textDirection}) {
-    return Path()..addOval(_adjustRect(rect).deflate(side.strokeInset));
+    final adjRect = _adjustRect(rect).deflate(side.strokeInset);
+
+    if (factorConcavidad <= 0) {
+      if (factorConcavidad <= -0.5) {
+        return Path()
+          ..moveTo(adjRect.centerRight.dx, adjRect.centerRight.dy)
+          ..addOval(adjRect);
+      }
+
+      final delta = (adjRect.longestSide / 2) * -factorConcavidad;
+      return Path()
+        ..moveTo(
+            adjRect.centerRight.dx - side.strokeInset, adjRect.centerRight.dy)
+        ..addArc(adjRect, 0, 3 * math.pi / 2)
+        ..cubicTo(
+          adjRect.topCenter.dx + delta,
+          adjRect.topCenter.dy,
+          adjRect.centerRight.dx,
+          adjRect.centerRight.dy - delta,
+          adjRect.centerRight.dx,
+          adjRect.centerRight.dy,
+        );
+    } else {
+      final delta = (adjRect.longestSide / 2) * factorConcavidad;
+      return Path()
+        ..moveTo(
+            adjRect.centerRight.dx - side.strokeInset, adjRect.centerRight.dy)
+        ..addArc(adjRect, 0, 3 * math.pi / 2)
+        ..cubicTo(
+          adjRect.topCenter.dx - delta,
+          adjRect.topCenter.dy + delta,
+          adjRect.centerRight.dx - delta,
+          adjRect.centerRight.dy + delta,
+          adjRect.centerRight.dx,
+          adjRect.centerRight.dy,
+        );
+    }
   }
 
   @override
   Path getOuterPath(Rect rect, {TextDirection? textDirection}) {
-    return Path()..addOval(_adjustRect(rect));
+    final adjRect = _adjustRect(rect);
+
+    final delta = (adjRect.longestSide / 2) * factorConcavidad;
+
+    return Path()
+      ..moveTo(
+          adjRect.centerRight.dx - side.strokeInset, adjRect.centerRight.dy)
+      ..addArc(adjRect, 0, 3 * math.pi / 2)
+      ..cubicTo(
+        adjRect.topCenter.dx - delta,
+        adjRect.topCenter.dy + delta,
+        adjRect.centerRight.dx - delta,
+        adjRect.centerRight.dy + delta,
+        adjRect.centerRight.dx,
+        adjRect.centerRight.dy,
+      );
   }
 
   @override
   void paintInterior(Canvas canvas, Rect rect, Paint paint,
       {TextDirection? textDirection}) {
-    canvas.drawCircle(rect.center, rect.shortestSide / 2.0, paint);
+    canvas.drawPath(getInnerPath(rect), paint);
   }
 
   @override
   bool get preferPaintInterior => true;
 
-  MoonBorder copyWith({BorderSide? side}) {
+  @override
+  MoonBorder copyWith({BorderSide? side, double? factorConcavidad}) {
     return MoonBorder(
       side: side ?? this.side,
+      factorConcavidad: factorConcavidad ?? this.factorConcavidad,
     );
   }
 
   @override
   void paint(Canvas canvas, Rect rect, {TextDirection? textDirection}) {
-    switch (side.style) {
-      case BorderStyle.none:
-        break;
-      case BorderStyle.solid:
-        canvas.drawCircle(rect.center,
-            (rect.shortestSide + side.strokeOffset) / 2, side.toPaint());
-    }
+    canvas.drawPath(getOuterPath(rect), side.toPaint());
   }
 
   Rect _adjustRect(Rect rect) {
@@ -411,14 +472,16 @@ class MoonBorder extends ShapeBorder {
     if (other.runtimeType != runtimeType) {
       return false;
     }
-    return other is CircleBorder && other.side == side;
+    return other is MoonBorder &&
+        other.side == side &&
+        other.factorConcavidad == factorConcavidad;
   }
 
   @override
-  int get hashCode => side.hashCode;
+  int get hashCode => Object.hash(side, factorConcavidad);
 
   @override
   String toString() {
-    return 'MoonBorder($side)';
+    return 'MoonBorder($side, $factorConcavidad)';
   }
 }
