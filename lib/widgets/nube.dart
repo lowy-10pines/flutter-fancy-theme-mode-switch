@@ -11,7 +11,7 @@ class Nube extends StatelessWidget {
   AlignmentTween get alignmentTween => AlignmentTween(
         // "Fuera de camara" para este tamaño de widget
         begin: const Alignment(-3.2, 7),
-        end: Alignment.bottomLeft,
+        end: const Alignment(-1.4, 1),
       );
 
   @override

@@ -21,7 +21,7 @@ class _FancySwitchState extends State<FancySwitch>
     with TickerProviderStateMixin {
   late final AnimationController _controller = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 1000),
+    duration: const Duration(milliseconds: 500),
   );
 
   Animation<double> get curvedAnimation => CurvedAnimation(
@@ -52,8 +52,8 @@ class _FancySwitchState extends State<FancySwitch>
     } else {
       _controller.reverse();
     }
-    const double height = 200;
-    const double width = 350;
+    const double height = 40;
+    const double width = 70;
     return SizedBox(
       height: height,
       width: width,
