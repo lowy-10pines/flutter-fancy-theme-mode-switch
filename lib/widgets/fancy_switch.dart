@@ -52,8 +52,8 @@ class _FancySwitchState extends State<FancySwitch>
     } else {
       _controller.reverse();
     }
-    const double height = 40;
-    const double width = 70;
+    const double height = 40 * 5;
+    const double width = 70 * 5;
     return SizedBox(
       height: height,
       width: width,
@@ -61,6 +61,14 @@ class _FancySwitchState extends State<FancySwitch>
         borderRadius: BorderRadius.circular(height / 2),
         child: GestureDetector(
           onTap: () => widget.onChanged?.call(!widget.value),
+          onPanUpdate: (details) {
+            final xDelta = details.delta.dx;
+            const espacioTotal =
+                width - height; // ancho menos ancho del nob (igual al alto)
+            final valor = xDelta / espacioTotal;
+            _controller.value += valor;
+            print(valor);
+          },
           child: Animacion(
             curvedAnimation,
             child: const FondoDeColor(

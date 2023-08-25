@@ -33,6 +33,7 @@ class _DecoratedBoxTransitionExampleAppState
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
+                Switch(value: value, onChanged: onTap),
                 FancySwitch(value: value, onChanged: onTap),
               ],
             ),
