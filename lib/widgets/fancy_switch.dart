@@ -62,12 +62,18 @@ class _FancySwitchState extends State<FancySwitch>
         child: GestureDetector(
           onTap: () => widget.onChanged?.call(!widget.value),
           onPanUpdate: (details) {
-            final xDelta = details.delta.dx;
-            const espacioTotal =
-                width - height; // ancho menos ancho del nob (igual al alto)
-            final valor = xDelta / espacioTotal;
-            _controller.value += valor;
-            print(valor);
+            final recorrido = details.delta.dx;
+            const espacio = width - height;
+            _controller.value += recorrido / espacio;
+          },
+          onPanEnd: (details) {
+            if (_controller.value < 0.5) {
+              _controller.reverse(from: _controller.value);
+              widget.onChanged?.call(false);
+            } else {
+              _controller.forward(from: _controller.value);
+              widget.onChanged?.call(true);
+            }
           },
           child: Animacion(
             curvedAnimation,
