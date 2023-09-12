@@ -46,12 +46,17 @@ class _FancySwitchState extends State<FancySwitch>
   }
 
   @override
-  Widget build(BuildContext context) {
+  void didUpdateWidget(covariant FancySwitch oldWidget) {
     if (widget.value) {
       _controller.forward();
     } else {
       _controller.reverse();
     }
+    super.didUpdateWidget(oldWidget);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     const double height = 40 * 5;
     const double width = 70 * 5;
     return SizedBox(
@@ -60,7 +65,9 @@ class _FancySwitchState extends State<FancySwitch>
       child: ClipRRect(
         borderRadius: BorderRadius.circular(height / 2),
         child: GestureDetector(
-          onTap: () => widget.onChanged?.call(!widget.value),
+          onTap: () {
+            widget.onChanged?.call(!widget.value);
+          },
           onPanUpdate: (details) {
             final recorrido = details.delta.dx;
             const espacio = width - height;
