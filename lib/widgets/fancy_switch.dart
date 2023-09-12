@@ -26,7 +26,7 @@ class _FancySwitchState extends State<FancySwitch>
 
   Animation<double> get curvedAnimation => CurvedAnimation(
         parent: _controller,
-        curve: Curves.easeInOutQuint,
+        curve: Curves.easeInOut,
       );
 
   @override
